@@ -1,7 +1,7 @@
 # [Project Title]
 
-**Group:** [number or name]
-**Course:** [course number], [semester]
+**Group:** JTSV
+**Course:** PSYCH 755, Summer 2026
 
 One or two sentences on what this project asks and what it found. Replace this before you submit.
 
@@ -12,7 +12,7 @@ One or two sentences on what this project asks and what it found. Replace this b
 | Tyler Johnston | Tyler-Johnston-1 |
 |Jacob Van Vleet|jacobvanvleet|
 |Shivya Paul|shivyapaul|
-| | |
+| Vanessa Kountakis | vanessakoun |
 
 If your GitHub handle is not your name, this table is how we connect your commits to you. Fill it in during the first 72 hours (each member can fill in their own name to satisfy the initial commitment requirement).
 
