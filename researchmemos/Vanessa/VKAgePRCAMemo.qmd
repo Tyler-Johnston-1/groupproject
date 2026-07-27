@@ -1,0 +1,181 @@
+---
+format:
+  pdf:
+    toc: false
+    number-sections: false
+
+fontsize: 10pt
+
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(tidyverse)
+library(broom)
+
+# Load data
+qualtrics <- read_csv(
+  "groupproject_data/data/PRCAQualtricsExport_FileC.csv",
+  show_col_types = FALSE
+)
+
+prolific_a <- read_csv(
+  "groupproject_data/data/PRCAProlificExport_FileA.csv",
+  show_col_types = FALSE
+)
+
+prolific_b <- read_csv(
+  "groupproject_data/data/PRCAProlificExport_FileB.csv",
+  show_col_types = FALSE
+)
+
+# Combine Prolific files
+prolific <- bind_rows(prolific_a, prolific_b)
+```
+
+```{r}
+#| label: score-prca
+#| include: false
+
+# Convert PRCA Likert responses to numeric scores
+score_likert <- function(x) {
+  case_when(
+    x == "Strongly disagree" ~ 1,
+    x == "Somewhat disagree" ~ 2,
+    x == "Neither agree nor disagree" ~ 3,
+    x == "Somewhat agree" ~ 4,
+    x == "Strongly agree" ~ 5,
+    TRUE ~ NA_real_
+  )
+}
+
+prca_data <- qualtrics |>
+  mutate(
+    across(
+      c(
+        Q1, Q2, Q3, Q4, Q5, Q6,
+        Q13, Q14, Q15, Q16, Q17, Q18
+      ),
+      score_likert
+    )
+  ) |>
+  mutate(
+    # Group discussion subscale
+    prca_group =
+      18 - (Q2 + Q4 + Q6) +
+      (Q1 + Q3 + Q5),
+
+    # Interpersonal communication subscale
+    prca_interpersonal =
+      18 - (Q14 + Q16 + Q17) +
+      (Q13 + Q15 + Q18),
+
+    # Combined communication apprehension score
+    ca_score =
+      prca_group + prca_interpersonal
+  )
+```
+
+```{r}
+#| label: merge-age
+#| include: false
+
+# Select participant age from Prolific
+prolific_age <- prolific |>
+  select(
+    prolific_id = `Participant id`,
+    age = Age
+  )
+
+# Merge age with communication apprehension scores
+age_data <- prca_data |>
+  left_join(
+    prolific_age,
+    by = c("Q0" = "prolific_id")
+  ) |>
+  filter(
+    !is.na(age),
+    !is.na(ca_score)
+  )
+```
+
+```{r}
+#| label: statistical-analysis
+#| include: false
+
+# Pearson correlation
+age_correlation <- cor.test(
+  age_data$age,
+  age_data$ca_score,
+  method = "pearson"
+)
+
+# Ordinary least squares regression
+age_model <- lm(
+  ca_score ~ age,
+  data = age_data
+)
+
+# Store results for use in memo text
+age_results <- tidy(
+  age_model,
+  conf.int = TRUE
+)
+
+model_results <- glance(age_model)
+
+age_coefficient <- age_results |>
+  filter(term == "age")
+
+n_participants <- nrow(age_data)
+
+r_value <- unname(age_correlation$estimate)
+age_estimate <- age_coefficient$estimate
+age_se <- age_coefficient$std.error
+age_t <- age_coefficient$statistic
+age_p <- age_coefficient$p.value
+age_r2 <- model_results$r.squared
+```
+
+**Researcher:** Vanessa Kountakis
+
+## Research Question: Does age predict communication apprehension?
+
+
+```{r}
+#| label: fig-age-ca
+#| fig-cap: "Relationship between age and communication apprehension."
+#| fig-width: 7
+#| fig-height: 4.5
+#| fig-align: center
+
+ggplot(
+  age_data,
+  aes(x = age, y = ca_score)
+) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(
+    method = "lm",
+    se = TRUE
+  ) +
+  labs(
+    x = "Age",
+    y = "Communication Apprehension Score"
+  ) +
+  theme_minimal()
+```
+
+## Answer, Response, + Summary of Results
+
+This analysis examined whether age predicts communication apprehension among `r n_participants` participants using combined group discussion and interpersonal PRCA scores. The scatterplot showed a slight downward trend, but scores varied widely across ages. A Pearson correlation and linear regression found a weak negative relationship, *r* = `r sprintf("%.3f", r_value)`, *b* = `r sprintf("%.3f", age_estimate)`, *p* = `r sprintf("%.3f", age_p)`. Age explained only `r sprintf("%.1f", age_r2 * 100)`% of the variation, so it was not a significant predictor of communication apprehension.
+
+
+## What Questions or Uncertainties Remain?
+
+A Future analyses could examine whether factors such as transportation habits, employment, education, or other demographic and behavioral characteristics are associated with communication apprehension.
