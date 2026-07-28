@@ -1,0 +1,51 @@
+---
+title: "Which encoding strategy (dummy or composite) provides better predictive performance for ordinal categorical variables?"
+author: "Jake Van Vleet"
+format: html
+bibliography: ../../docs/references.bib
+---
+
+Composite encoding provides better predictive performance than dummy encoding for ordinal categorical variables. In this analysis, composite encoding achieved a test R² of 0.129 compared to 0.082 for dummy encoding—a 57% improvement in predictive power.
+
+I compared the two encoding strategies using four transportation habit variables (public transport frequency, rides per day, rideshare frequency, rideshare rides per day) as predictors of communication apprehension [@mccroskey1970]. Both approaches used identical linear regression models with 80-20 train-test splits and 5-fold cross-validation.
+
+**Dummy encoding** created 14 binary features from the 4 categorical variables by creating dummy variables for each category level, for 15 total predictors including age. 
+
+**Composite encoding** preserved the natural ordinal structure by assigning numeric values (0-4) based on frequency/quantity categories, resulting in only 5 total predictors.
+
+
+```{python}
+#| label: fig-performance-comparison
+#| fig-cap: "Test and cross-validated R² by encoding strategy. Dummy encoding falls below zero under cross-validation, indicating it predicts worse than the sample mean."
+#| echo: true
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+sns.set_theme(style='whitegrid')
+
+# Reshape to long form so seaborn can group the two metrics
+plot_df = comparison_df.melt(
+    id_vars='Encoding Strategy',
+    value_vars=['Test R²', 'CV R² Mean'],
+    var_name='Metric',
+    value_name='R²'
+)
+plot_df['Metric'] = plot_df['Metric'].replace({'CV R² Mean': 'Cross-validated R²'})
+
+ax = sns.barplot(data=plot_df, x='Encoding Strategy', y='R²',
+                 hue='Metric', palette=['#3498db', '#e74c3c'])
+
+ax.axhline(y=0, color='black', linewidth=0.9)
+ax.set_title('Predictive Performance by Encoding Strategy')
+ax.legend(title=None)
+
+for container in ax.containers:
+    ax.bar_label(container, fmt='%.3f', fontweight='bold', padding=2)
+
+plt.tight_layout()
+plt.show()
+```
+
+As shown in @fig-performance-comparison, composite encoding outperforms dummy encoding on both metrics, and the gap widens under cross-validation. Dummy encoding's negative cross-validated R² means that, averaged across folds, it predicted communication apprehension worse than simply using the sample mean would have—clear evidence that its 15 predictors were fitting noise rather than signal.
+
+# References
