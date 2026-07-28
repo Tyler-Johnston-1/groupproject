@@ -1,0 +1,433 @@
+---
+title: "Com_Apprehension_Transportation"
+format: html
+editor: visual
+---
+
+# Preparation
+
+```{r}
+
+library(tidyverse)
+options(conflicts.policy = "depends.ok")
+path_data <- "groupproject_sibling_data/cleandata"
+```
+
+```{r}
+data <- read.csv(here::here(path_data, "minimal_clean.csv")) |> 
+  glimpse()
+```
+
+```{r}
+data_all <- data |>
+  mutate(
+    Age = as.integer(Age),
+    Sex = factor(Sex),
+    public_transport = factor(
+      public_transport,
+      levels = c(0, 1)
+    ),
+    public_transport_monthly = ordered(
+      public_transport_monthly,
+      levels = c(0, 1, 2, 3, 4)
+    ),
+    public_transport_daily = ordered(
+      public_transport_daily,
+      levels = c(1, 2, 3, 4)
+    ),
+    ride_share = factor(
+      ride_share,
+      levels = c(0, 1)
+    ),
+    ride_share_monthly = ordered(
+      ride_share_monthly,
+      levels = c(0, 1, 2, 3, 4)
+    ),
+    ride_share_daily = ordered(
+      ride_share_daily,
+      levels = c(1, 2, 3, 4)
+    )
+  ) |>
+  glimpse()
+```
+
+```{r}
+data_all <- data_all |>
+  mutate(
+    transport_group = case_when(
+      ride_share == 0 & public_transport == 0 ~ "Neither",
+      ride_share == 1 & public_transport == 0 ~ "Ride share only",
+      ride_share == 0 & public_transport == 1 ~ "Public transport only",
+      ride_share == 1 & public_transport == 1 ~ "Both"
+    ),
+    transport_group = factor(
+      transport_group,
+      levels = c(
+        "Neither",
+        "Ride share only",
+        "Public transport only",
+        "Both"
+      )
+    )
+  )
+```
+
+# Analysis
+
+### Ride-share users vs non-users
+
+```{r}
+ride_share_model <- lm(
+  communication_apprehension ~ ride_share,
+  data = data_all
+)
+
+summary(ride_share_model)
+```
+
+Ride-share users had communication apprehension scores that were, on average, 0.62 points lower (per question) than those of non-users, *b* = −0.62, *SE* = 0.13, *t*(250) = −4.96, *p* \< .001.
+
+### Public transport users vs non-users
+
+```{r}
+public_transport_model <- lm(
+  communication_apprehension ~ public_transport,
+  data = data_all
+)
+
+summary(public_transport_model)
+```
+
+Public transportation users had communication apprehension scores that were, on average, 0.53 points lower (per question) than those of non-users, *b* = −0.53, *SE* = 0.14, *t*(250) = −3.71, *p* \< .001.
+
+### Both (there is overlap)
+
+Some participants use both public transportation and ride-shares, so this model doesn't directly answer our question.
+
+```{r}
+transport_model <- lm(
+  communication_apprehension ~ ride_share + public_transport,
+  data = data_all
+)
+
+summary(transport_model)
+```
+
+Ride-share users who did not use public transportation had estimated communication apprehension scores 0.51 points lower, on average, than participants who used neither mode, *b* = −0.51, *SE* = 0.14, *t*(249) = −3.62, *p* \< .001.
+
+Public-transport users who did not use ride share had estimated communication apprehension scores 0.26 points lower, on average, than participants who used neither mode, *b* = −0.26, *SE* = 0.16, *t*(249) = −1.66, *p* = .098.
+
+|        Transportation         | Avg. Communication Apprehension/Question |
+|:-----------------------------:|:----------------------------------------:|
+|            Neither            |                   1.98                   |
+|     Public Transportation     |                   1.72                   |
+|          Ride Share           |                   1.47                   |
+| Public Transport & Ride Share |                   1.21                   |
+
+: \*Public Transportation value uses ALL Ps who use public transport (including those that also use ride-share). Likewise, Ride Share Transportation value uses ALL Ps who use ride-share (including those that also use public transportation).
+
+### Both, using groups to isolate
+
+```{r}
+transport_group_model <- lm(
+  communication_apprehension ~ transport_group,
+  data = data_all
+)
+
+summary(transport_group_model)
+```
+
+|        Transportation         | Avg. Communication Apprehension/Question |
+|:-----------------------------:|:----------------------------------------:|
+|            Neither            |                   2.11                   |
+|  Public Transportation Only   |                   1.59                   |
+|        Ride Share Only        |                   1.17                   |
+| Public Transport & Ride Share |                   1.23                   |
+
+**Ride share only vs. neither:**
+
+Participants who used ride share but not public transportation reported communication apprehension scores that were, on average, **0.94 points lower** than participants who used neither mode, *b* = −0.94, *SE* = 0.27, *t*(248) = −3.44, *p* \< .001.
+
+**Public transport only vs. neither:**
+
+Participants who used public transportation but not ride share reported communication apprehension scores that were, on average, **0.52 points lower** than participants who used neither mode, *b* = −0.52, *SE* = 0.21, *t*(248) = −2.46, *p* = .015.
+
+**Both vs. neither:**
+
+Participants who used both ride share and public transportation reported communication apprehension scores that were, on average, **0.88 points lower** than participants who used neither mode, *b* = −0.88, *SE* = 0.16, *t*(248) = −5.33, *p* \< .001.
+
+**Overall model is significant:**
+
+Transportation-use group was significantly associated with communication apprehension, *F*(3, 248) = 10.38, *p* \< .001, Rsqu = .112, so \~11.2% of the variance in communication apprehension is accounted for by which transportation group one falls into.
+
+```{r}
+data_all <- data_all |>
+  mutate(
+    transport_group = relevel(
+      transport_group,
+      ref = "Public transport only"
+    )
+  )
+
+model_group <- lm(
+  communication_apprehension ~ transport_group,
+  data = data_all
+)
+
+summary(model_group)
+```
+
+Using public transport only as our reference group, we now have a test statistic that directly compares public transport only to ride share only.
+
+Participants who use ride share but not public transportation had communication apprehension scores that were, on average, 0.43 points lower than participants who use public transportation but not ride share; however, this difference was not statistically significant, *b* = −0.43, *SE* = 0.27, *t*(248) = −1.55, *p* = .122.
+
+**Maybe more interesting question: Do Ps who use ride-share, public transport, or both differ in communication apprehension from people who use neither?**
+
+```{r}
+data_all <- data_all |>
+  mutate(
+    any_transport = case_when(
+      ride_share == 0 & public_transport == 0 ~ "Neither",
+      ride_share == 1 | public_transport == 1 ~ "Any"
+    ),
+    any_transport = factor(
+      any_transport,
+      levels = c("Neither", "Any")
+    )
+  )
+
+model_any <- lm(
+  communication_apprehension ~ any_transport,
+  data = data_all
+)
+
+summary(model_any)
+```
+
+Participants who used either ride share, public transportation, or both reported communication apprehension scores that were, on average, 0.82 points lower than participants who used neither mode, *b* = −0.82, *SE* = 0.16, *t*(250) = −5.08, *p* \< .001.
+
+### Analysis including frequency of use.
+
+Probably going to only use monthly since the daily question didn't give participants the option to choose 0 even if they reported never using that mode of transport.
+
+#### Quick EDA
+
+```{r}
+data_all |>
+  group_by(ride_share_monthly) |>
+  summarize(
+    n = n(),
+    mean_CA = mean(communication_apprehension, na.rm = TRUE),
+    sd_CA = sd(communication_apprehension, na.rm = TRUE)
+  )
+
+
+
+data_all |>
+  group_by(public_transport_monthly) |>
+  summarize(
+    n = n(),
+    mean_CA = mean(communication_apprehension, na.rm = TRUE),
+    sd_CA = sd(communication_apprehension, na.rm = TRUE)
+  )
+```
+
+#### Analysis
+
+```{r}
+model_ride_frequency <- lm(
+  communication_apprehension ~ factor(ride_share_monthly),
+  data = data_all
+)
+
+model_public_frequency <- lm(
+  communication_apprehension ~ factor(public_transport_monthly),
+  data = data_all
+)
+
+summary(model_ride_frequency)
+summary(model_public_frequency)
+
+anova(model_ride_frequency)
+anova(model_public_frequency)
+```
+
+**Overall model**
+
+Communication apprehension differed significantly across levels of monthly ride-share use, *F*(4, 247) = 9.31, *p* \< .001, Rsqu = .131
+
+```{r}
+model_frequency_both <- lm(
+  communication_apprehension ~
+    factor(ride_share_monthly) +
+    factor(public_transport_monthly),
+  data = data_all
+)
+
+summary(model_frequency_both)
+anova(model_frequency_both)
+```
+
+There was a significant negative linear trend in communication apprehension across increasing categories of ride-share frequency, after controlling for public-transport frequency, *b* = −0.64, *SE* = 0.19, *t*(243) = −3.47, *p* \< .001.
+
+i.e. **Ps tended to have lower communication apprehension as ride-share use increased, even after accounting for differences in public transportation use.**
+
+AND
+
+There was no evidence of a linear trend in communication apprehension across increasing categories of public-transport frequency after controlling for ride-share frequency, *b* = −0.13, *SE* = 0.15, *t*(243) = −0.86, *p* = .390.
+
+i.e. **After accounting for ride-share frequency, public transportation frequency was not significantly associated with communication apprehension.**
+
+#### Analysis treating frequency categories as numeric rather than ordinal
+
+```{r}
+data_all <- data_all |>
+  mutate(
+    ride_frequency = as.numeric(as.character(ride_share_monthly)),
+    public_frequency = as.numeric(as.character(public_transport_monthly))
+  )
+
+model_frequency <- lm(
+  communication_apprehension ~ ride_frequency + public_frequency,
+  data = data_all
+)
+
+summary(model_frequency)
+```
+
+**Each one-category increase in ride-share frequency was associated with an average 0.23-point decrease in communication apprehension, accounting for public-transport frequency, *b* = −0.23, *SE* = 0.05, *t*(249) = −4.28, *p* \< .001.**
+
+**Each one-category increase in public-transport frequency was associated with an estimated 0.05-point decrease in communication apprehension after accounting for ride-share frequency; however, this association was not statistically significant, *b* = −0.05, *SE* = 0.05, *t*(249) = −1.00, *p* = .318.**
+
+#### Visualization
+
+```{r}
+plot_data <- data_all |>
+  select(
+    communication_apprehension,
+    ride_share_monthly,
+    public_transport_monthly
+  ) |>
+  pivot_longer(
+    cols = c(ride_share_monthly, public_transport_monthly),
+    names_to = "transport",
+    values_to = "frequency"
+  ) |>
+  mutate(
+    frequency = as.numeric(as.character(frequency))
+  )
+
+ggplot(
+  plot_data,
+  aes(
+    x = frequency,
+    y = communication_apprehension,
+    color = transport
+  )
+) +
+  geom_jitter(width = 0.1, height = 0, alpha = 0.5) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    x = "Monthly use frequency",
+    y = "Communication apprehension",
+    color = "Transportation mode"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+exclusive_plot <- data_all |>
+  filter(
+    transport_group %in% c(
+      "Ride share only",
+      "Public transport only"
+    )
+  ) |>
+  mutate(
+    frequency = if_else(
+      transport_group == "Ride share only",
+      as.numeric(as.character(ride_share_monthly)),
+      as.numeric(as.character(public_transport_monthly))
+    )
+  )
+
+ggplot(
+  exclusive_plot,
+  aes(
+    x = frequency,
+    y = communication_apprehension,
+    color = transport_group
+  )
+) +
+  geom_jitter(width = 0.1, height = 0, alpha = 0.6) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    x = "Monthly use frequency",
+    y = "Communication apprehension",
+    color = "Transportation mode"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+exclusive_plot <- data_all |>
+  filter(
+    transport_group %in% c(
+      "Ride share only",
+      "Public transport only"
+    )
+  ) |>
+  mutate(
+    frequency = if_else(
+      transport_group == "Ride share only",
+      ride_frequency,
+      public_frequency
+    )
+  )
+
+all_plot <- data_all |>
+  select(
+    communication_apprehension,
+    ride_frequency,
+    public_frequency
+  ) |>
+  pivot_longer(
+    cols = c(ride_frequency, public_frequency),
+    values_to = "frequency"
+  )
+
+ggplot(
+  exclusive_plot,
+  aes(
+    x = frequency,
+    y = communication_apprehension,
+    color = transport_group
+  )
+) +
+  geom_jitter(
+    width = 0.1,
+    height = 0,
+    alpha = 0.6
+  ) +
+  geom_smooth(
+    method = "lm",
+    se = FALSE
+  ) +
+  geom_smooth(
+    data = all_plot,
+    aes(
+      x = frequency,
+      y = communication_apprehension
+    ),
+    inherit.aes = FALSE,
+    method = "lm",
+    se = FALSE,
+    color = "black"
+  ) +
+  labs(
+    x = "Monthly use frequency",
+    y = "Communication apprehension",
+    color = "Transportation mode"
+  ) +
+  theme_minimal()
+```

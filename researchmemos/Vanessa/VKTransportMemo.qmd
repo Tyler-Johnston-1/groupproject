@@ -1,0 +1,221 @@
+---
+format:
+  pdf:
+    toc: false
+    number-sections: false
+
+fontsize: 10pt
+
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(tidyverse)
+library(broom)
+
+qualtrics <- read_csv(
+  "groupproject_data/data/PRCAQualtricsExport_FileC.csv",
+  show_col_types = FALSE
+)
+```
+
+```{r}
+#| label: score-prca
+#| include: false
+
+score_likert <- function(x) {
+  case_when(
+    x == "Strongly disagree" ~ 1,
+    x == "Somewhat disagree" ~ 2,
+    x == "Neither agree nor disagree" ~ 3,
+    x == "Somewhat agree" ~ 4,
+    x == "Strongly agree" ~ 5,
+    TRUE ~ NA_real_
+  )
+}
+
+prca_data <- qualtrics |>
+  mutate(
+    across(
+      c(
+        Q1, Q2, Q3, Q4, Q5, Q6,
+        Q13, Q14, Q15, Q16, Q17, Q18
+      ),
+      score_likert
+    )
+  ) |>
+  mutate(
+    prca_group =
+      18 - (Q2 + Q4 + Q6) +
+      (Q1 + Q3 + Q5),
+
+    prca_interpersonal =
+      18 - (Q14 + Q16 + Q17) +
+      (Q13 + Q15 + Q18),
+
+    ca_score =
+      prca_group + prca_interpersonal
+  )
+```
+
+```{r}
+#| label: transportation-data
+#| include: false
+
+transport_levels <- c(
+  "Never",
+  "0-1 days a month",
+  "2-4 days a month",
+  "4-8 days a month",
+  "8 or more days a month"
+)
+
+transport_data <- prca_data |>
+  mutate(
+    public_transit = factor(
+      Q26,
+      levels = transport_levels
+    ),
+    rideshare = factor(
+      Q28,
+      levels = transport_levels
+    )
+  ) |>
+  filter(
+    !is.na(ca_score),
+    !is.na(public_transit),
+    !is.na(rideshare)
+  )
+```
+
+```{r}
+#| label: transportation-model
+#| include: false
+
+transport_model <- lm(
+  ca_score ~ public_transit + rideshare,
+  data = transport_data
+)
+
+model_results <- glance(transport_model)
+
+drop_results <- drop1(
+  transport_model,
+  test = "F"
+) |>
+  as.data.frame() |>
+  rownames_to_column("term")
+
+public_p <- drop_results |>
+  filter(term == "public_transit") |>
+  pull(`Pr(>F)`)
+
+rideshare_p <- drop_results |>
+  filter(term == "rideshare") |>
+  pull(`Pr(>F)`)
+
+transport_r2 <- model_results$r.squared
+model_p <- model_results$p.value
+n_transport <- nrow(transport_data)
+
+format_p <- function(p) {
+  if (p < .001) {
+    "< .001"
+  } else {
+    paste0("= ", sprintf("%.3f", p))
+  }
+}
+```
+
+```{r}
+#| label: transportation-plot-data
+#| include: false
+
+transport_plot <- transport_data |>
+  select(
+    ca_score,
+    public_transit,
+    rideshare
+  ) |>
+  pivot_longer(
+    cols = c(public_transit, rideshare),
+    names_to = "transport_type",
+    values_to = "frequency"
+  ) |>
+  mutate(
+    transport_type = recode(
+      transport_type,
+      public_transit = "Public Transportation",
+      rideshare = "Rideshare"
+    ),
+    frequency = recode(
+      as.character(frequency),
+      "Never" = "Never",
+      "0-1 days a month" = "0–1 days/month",
+      "2-4 days a month" = "2–4 days/month",
+      "4-8 days a month" = "4–8 days/month",
+      "8 or more days a month" = "8+ days/month"
+    ),
+    frequency = factor(
+      frequency,
+      levels = c(
+        "Never",
+        "0–1 days/month",
+        "2–4 days/month",
+        "4–8 days/month",
+        "8+ days/month"
+      )
+    )
+  )
+```
+
+**Researcher:** Vanessa Kountakis
+
+## Research Question: Do Transportation Habits Predict Communication Apprehension?
+
+```{r}
+#| label: fig-transport-ca
+#| fig-width: 6.5
+#| fig-height: 3.0
+#| fig-align: center
+
+ggplot(
+  transport_plot,
+  aes(
+    x = frequency,
+    y = ca_score
+  )
+) +
+  geom_boxplot() +
+  facet_wrap(
+    ~ transport_type,
+    ncol = 2
+  ) +
+  labs(
+    x = "Frequency of Use",
+    y = "Communication Apprehension Score"
+  ) +
+  theme_minimal(base_size = 9) +
+  theme(
+    axis.text.x = element_text(
+      angle = 25,
+      hjust = 1
+    )
+  )
+```
+
+**Answer, Response, + Summary of Results**
+
+This analysis examined whether public transportation and rideshare frequency predict communication apprehension among `r n_transport` participants using combined group discussion and interpersonal PRCA scores. The boxplots showed little consistent difference across levels of public transportation use, while communication apprehension generally decreased as rideshare use became more frequent.
+
+A Spearman correlation showed a significant negative relationship between rideshare frequency and communication apprehension, ρ = -.344, *p* < .001. In a regression including both transportation measures, rideshare frequency significantly predicted communication apprehension, *p* < .001, while public transportation frequency did not, *p* = .882. Overall, the relationship between transportation habits and communication apprehension was primarily associated with rideshare use.
+
+**What Questions or Uncertainties Remain?**
+
+Would rideshare frequency still predict communication apprehension after accounting for other factors such as age, car access, and employment status?
