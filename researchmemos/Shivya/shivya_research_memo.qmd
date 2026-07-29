@@ -1,0 +1,89 @@
+---
+title: "Driver's License, Car Access, and Communication Apprehension"
+author: "Shivya Paul"
+date: "July 27, 2026"
+format:
+  html:
+    toc: false
+    number-sections: false
+  pdf:
+    toc: false
+    number-sections: false
+    geometry:
+      - margin=0.6in
+    fontsize: 10.5pt
+    mainfont: "Times New Roman"
+    documentclass: article
+    papersize: letter
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+**Title:** Driver's License, Car Access, and Communication Apprehension  
+**Researcher:** Shivya Paul  
+**Date:** July 27, 2026
+
+## Research or Analytical Question
+
+Do people who have access to a car or a driver's license differ in communication apprehension from people who do not?
+
+## Answer, Response, + Summary of Results
+
+I used responses from participants who could be matched across the Prolific and Qualtrics datasets. Group-discussion apprehension was calculated from Q1–Q6, and interpersonal apprehension was calculated from Q13–Q18. Positively worded items were reverse scored so that higher scores indicated greater communication apprehension. Because 99 participants did not answer the transportation-access questions, the driver's-license analysis included 153 participants and the car-access analysis included 152.
+
+Participants without a driver's license had slightly higher average group-discussion apprehension than those with a license, 2.82 compared with 2.60. They also had higher interpersonal apprehension, 2.80 compared with 2.46. Neither difference was statistically significant.
+
+The same pattern appeared for car access. Participants without access to a car had slightly higher group-discussion apprehension than those with access, 2.83 compared with 2.58. Their interpersonal apprehension was also higher, 2.76 compared with 2.45. These differences were also not statistically significant.
+
+Overall, participants without a license or car access had somewhat higher communication-apprehension scores, but all four differences were small and had p-values above .05. Therefore, this analysis did not find enough evidence to conclude that communication apprehension differed by driver's-license status or car access.
+
+```{python}
+# Create compact results table
+import pandas as pd
+
+results_data = [
+    {
+        'Comparison': "Driver's license — Group discussion",
+        'Yes M (SD)': '2.60 (1.06)',
+        'No M (SD)': '2.82 (0.99)',
+        "Welch's t(df)": 't(27.94) = -0.96',
+        'p': '.345',
+        "Cohen's d": '-0.21'
+    },
+    {
+        'Comparison': "Driver's license — Interpersonal",
+        'Yes M (SD)': '2.46 (1.06)',
+        'No M (SD)': '2.80 (0.91)',
+        "Welch's t(df)": 't(29.42) = -1.55',
+        'p': '.133',
+        "Cohen's d": '-0.32'
+    },
+    {
+        'Comparison': 'Car access — Group discussion',
+        'Yes M (SD)': '2.58 (1.09)',
+        'No M (SD)': '2.83 (0.88)',
+        "Welch's t(df)": 't(42.51) = -1.27',
+        'p': '.212',
+        "Cohen's d": '-0.24'
+    },
+    {
+        'Comparison': 'Car access — Interpersonal',
+        'Yes M (SD)': '2.45 (1.07)',
+        'No M (SD)': '2.76 (0.91)',
+        "Welch's t(df)": 't(40.55) = -1.56',
+        'p': '.128',
+        "Cohen's d": '-0.30'
+    }
+]
+
+results_df = pd.DataFrame(results_data)
+results_df.style.hide(axis="index").set_properties(**{'font-size': '9pt'})
+```
+
+## What questions or uncertainties remain?
+
+- Ninety-nine participants did not answer Q20 or Q21, and the groups without a license or car access were much smaller than the Yes groups.
+- Age and other factors, such as income, disability, location, and public-transportation availability, may be related to both transportation access and communication apprehension.
+- These observational data cannot establish causation, and the survey contained only the group-discussion and interpersonal portions of the PRCA.
