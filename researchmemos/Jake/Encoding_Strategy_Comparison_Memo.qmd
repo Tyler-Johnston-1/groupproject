@@ -1,51 +1,56 @@
 ---
-title: "Which encoding strategy (dummy or composite) provides better predictive performance for ordinal categorical variables?"
-author: "Jake Van Vleet"
+title: "Which encoding strategy (composite or dummy) provides better predictive performance?"
+author: "Jacob Van Vleet"
 format: html
-bibliography: ../../docs/references.bib
+execute:
+  echo: true
+  warning: false
+  message: false
 ---
 
-Composite encoding provides better predictive performance than dummy encoding for ordinal categorical variables. In this analysis, composite encoding achieved a test R² of 0.129 compared to 0.082 for dummy encoding—a 57% improvement in predictive power.
+**Composite (ordinal) encoding provides better predictive performance than dummy encoding.** Across 30 repetitions of 10-fold cross-validation, the composite model achieved a mean $R^2$ of **0.060** (95% CI [0.047, 0.072]) compared to **0.003** (95% CI [-0.011, 0.017]) for the dummy model, and it also produced lower RMSE (0.870 vs. 0.894) and lower MAE (0.716 vs. 0.725). The advantage held in **every one of the 30 repetitions** for both $R^2$ and RMSE, and in 28 of 30 for MAE.
 
-I compared the two encoding strategies using four transportation habit variables (public transport frequency, rides per day, rideshare frequency, rideshare rides per day) as predictors of communication apprehension [@mccroskey1970]. Both approaches used identical linear regression models with 80-20 train-test splits and 5-fold cross-validation.
-
-**Dummy encoding** created 14 binary features from the 4 categorical variables by creating dummy variables for each category level, for 15 total predictors including age. 
-
-**Composite encoding** preserved the natural ordinal structure by assigning numeric values (0-4) based on frequency/quantity categories, resulting in only 5 total predictors.
-
+Composite encoding represents each transportation question with a single ordered variable, whereas dummy encoding creates a separate indicator variable for every response category. Starting from the merged dataset, I scored communication apprehension from the 12 PRCA items after reverse-scoring the positively worded ones, built both encodings from the same 243 complete respondents, and fit identical linear regression models that differed only in encoding. Both models were evaluated on the **same** repeated 10-fold cross-validation splits (30 repetitions), so every difference in $R^2$, RMSE, and MAE comes from a paired comparison on identical data; means were compared with bootstrap confidence intervals across the 30 repetitions.
 
 ```{python}
-#| label: fig-performance-comparison
-#| fig-cap: "Test and cross-validated R² by encoding strategy. Dummy encoding falls below zero under cross-validation, indicating it predicts worse than the sample mean."
-#| echo: true
-import matplotlib.pyplot as plt
+#| label: fig-r2-comparison
+#| fig-cap: "Repeated cross-validated $R^2$ values for the composite and dummy encoding strategies."
+
+import pandas as pd
 import seaborn as sns
+import matplotlib.pyplot as plt
 
-sns.set_theme(style='whitegrid')
+repeat_results = pd.read_csv("../../data/results/encoding_cv_repeat_results.csv")
 
-# Reshape to long form so seaborn can group the two metrics
-plot_df = comparison_df.melt(
-    id_vars='Encoding Strategy',
-    value_vars=['Test R²', 'CV R² Mean'],
-    var_name='Metric',
-    value_name='R²'
+plot_data = repeat_results.rename(
+    columns={
+        "r2_composite":"Composite",
+        "r2_dummy":"Dummy"
+    }
+).melt(
+    id_vars="repeat",
+    value_vars=["Composite","Dummy"],
+    var_name="Encoding Strategy",
+    value_name="Cross-validated R²"
 )
-plot_df['Metric'] = plot_df['Metric'].replace({'CV R² Mean': 'Cross-validated R²'})
 
-ax = sns.barplot(data=plot_df, x='Encoding Strategy', y='R²',
-                 hue='Metric', palette=['#3498db', '#e74c3c'])
+plt.figure(figsize=(6,4))
 
-ax.axhline(y=0, color='black', linewidth=0.9)
-ax.set_title('Predictive Performance by Encoding Strategy')
-ax.legend(title=None)
+sns.boxplot(
+    data=plot_data,
+    x="Encoding Strategy",
+    y="Cross-validated R²"
+)
 
-for container in ax.containers:
-    ax.bar_label(container, fmt='%.3f', fontweight='bold', padding=2)
+sns.stripplot(
+    data=plot_data,
+    x="Encoding Strategy",
+    y="Cross-validated R²",
+    alpha=.55
+)
 
 plt.tight_layout()
 plt.show()
 ```
 
-As shown in @fig-performance-comparison, composite encoding outperforms dummy encoding on both metrics, and the gap widens under cross-validation. Dummy encoding's negative cross-validated R² means that, averaged across folds, it predicted communication apprehension worse than simply using the sample mean would have—clear evidence that its 15 predictors were fitting noise rather than signal.
-
-# References
+@fig-r2-comparison shows the performance advantage was consistent across repeated cross-validation rather than being driven by a single favorable train-test split: the paired composite-minus-dummy difference in mean cross-validated $R^2$ was **+0.057** (95% CI [0.051, 0.063]), with composite also producing consistently lower prediction error. 

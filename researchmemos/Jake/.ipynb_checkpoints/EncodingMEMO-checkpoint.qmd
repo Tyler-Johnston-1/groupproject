@@ -1,0 +1,80 @@
+---
+title: "Research Memo: Comparing Transportation Encoding Strategies"
+author: "Jacob Van Vleet"
+format:
+  html:
+    toc: false
+    embed-resources: true
+editor_options:
+  chunk_output_type: console
+---
+
+# Introduction
+
+One important feature engineering decision when working with survey data is how categorical variables should be represented before modeling. This memo evaluates whether representing transportation variables with ordinal (composite) values or dummy variables leads to better prediction of communication apprehension. My contribution to the project focused on comparing these two encoding strategies while holding the modeling procedure constant.
+
+## Methods
+
+The analysis used the cleaned and merged project dataset. Communication apprehension was calculated from the PRCA items after reverse scoring the positively worded questions. Two predictor datasets were created. The first encoded transportation responses as ordinal variables, while the second represented each response category with dummy variables. Both datasets included age as a predictor and were evaluated using identical repeated 10-fold cross-validation with ordinary least squares regression. Performance was summarized using R², RMSE, and MAE.
+
+# Results
+
+## Comparison of R²
+
+```{python}
+#| label: fig-r2
+#| fig-cap: "Distribution of repeated cross-validation R² values for the ordinal and dummy encoding strategies."
+
+sns.boxplot(
+    data=repeat_results,
+    x="encoding",
+    y="r2"
+)
+plt.xlabel("Encoding strategy")
+plt.ylabel("Cross-validated R²")
+plt.show()
+```
+
+Figure @fig-r2 compares the distribution of cross-validated R² values for the two encoding strategies. The two distributions overlap considerably, indicating that both approaches explain a similar proportion of variation in communication apprehension. Neither strategy demonstrates a consistent advantage in predictive performance.
+
+## Comparison of RMSE
+
+```{python}
+#| label: fig-rmse
+#| fig-cap: "Distribution of repeated cross-validation RMSE values for the ordinal and dummy encoding strategies."
+
+sns.boxplot(
+    data=repeat_results,
+    x="encoding",
+    y="rmse"
+)
+plt.xlabel("Encoding strategy")
+plt.ylabel("RMSE")
+plt.show()
+```
+
+Figure @fig-rmse compares prediction error across repeated cross-validation. Lower RMSE values indicate better predictive accuracy. The distributions are nearly identical, suggesting that the choice of encoding has little practical effect on prediction error.
+
+## Comparison of MAE
+
+```{python}
+#| label: fig-mae
+#| fig-cap: "Distribution of repeated cross-validation MAE values for the ordinal and dummy encoding strategies."
+
+sns.boxplot(
+    data=repeat_results,
+    x="encoding",
+    y="mae"
+)
+plt.xlabel("Encoding strategy")
+plt.ylabel("MAE")
+plt.show()
+```
+
+Figure @fig-mae provides a second measure of prediction error. Similar to the RMSE results, the MAE distributions show little difference between the two encoding approaches, further supporting the conclusion that both strategies perform comparably.
+
+# Discussion
+
+Across all three evaluation metrics, ordinal and dummy encoding produced very similar predictive performance. Although dummy encoding allows the model to estimate separate effects for each transportation category, ordinal encoding preserves the natural ordering of the survey responses while using fewer predictor variables. Because predictive performance was nearly identical, either encoding strategy appears reasonable for this application.
+
+This comparison highlights the importance of evaluating preprocessing decisions empirically. Feature engineering choices can influence model complexity and interpretability, even when they produce similar predictive accuracy. By comparing encoding strategies using identical cross-validation splits, this analysis isolates the effect of feature representation and provides evidence that transportation encoding has only a modest impact on model performance in this dataset.
