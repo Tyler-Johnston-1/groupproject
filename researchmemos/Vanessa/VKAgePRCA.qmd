@@ -7,7 +7,7 @@ format:
 fontsize: 10pt
 
 execute:
-  echo: false
+  echo: true
   warning: false
   message: false
 ---
