@@ -7,7 +7,7 @@ format:
 fontsize: 10pt
 
 execute:
-  echo: false
+  echo: true
   warning: false
   message: false
 ---
@@ -18,9 +18,10 @@ execute:
 
 library(tidyverse)
 library(broom)
+library(knitr)
 
 qualtrics <- read_csv(
-  "groupproject_data/data/PRCAQualtricsExport_FileC.csv",
+  "data/PRCAQualtricsExport_FileC.csv",
   show_col_types = FALSE
 )
 ```
@@ -85,52 +86,123 @@ transport_data <- prca_data |>
     rideshare = factor(
       Q28,
       levels = transport_levels
-    )
+    ),
+
+    # Numeric coding used only for supplemental Pearson correlations
+    public_transit_num = as.numeric(public_transit) - 1,
+    rideshare_num = as.numeric(rideshare) - 1
   ) |>
   filter(
     !is.na(ca_score),
     !is.na(public_transit),
     !is.na(rideshare)
   )
+
+n_transport <- nrow(transport_data)
 ```
 
 ```{r}
-#| label: transportation-model
+#| label: anova-analysis
 #| include: false
 
-transport_model <- lm(
-  ca_score ~ public_transit + rideshare,
+# One-way ANOVA: public transportation
+public_anova <- aov(
+  ca_score ~ public_transit,
   data = transport_data
 )
 
-model_results <- glance(transport_model)
+# One-way ANOVA: rideshare
+rideshare_anova <- aov(
+  ca_score ~ rideshare,
+  data = transport_data
+)
 
-drop_results <- drop1(
-  transport_model,
-  test = "F"
-) |>
-  as.data.frame() |>
-  rownames_to_column("term")
+# Clean ANOVA results
+public_results <- tidy(public_anova)
+rideshare_results <- tidy(rideshare_anova)
 
-public_p <- drop_results |>
+# Store results for memo text
+public_f <- public_results |>
   filter(term == "public_transit") |>
-  pull(`Pr(>F)`)
+  pull(statistic)
 
-rideshare_p <- drop_results |>
+public_p <- public_results |>
+  filter(term == "public_transit") |>
+  pull(p.value)
+
+rideshare_f <- rideshare_results |>
   filter(term == "rideshare") |>
-  pull(`Pr(>F)`)
+  pull(statistic)
 
-transport_r2 <- model_results$r.squared
-model_p <- model_results$p.value
-n_transport <- nrow(transport_data)
+rideshare_p <- rideshare_results |>
+  filter(term == "rideshare") |>
+  pull(p.value)
 
-format_p <- function(p) {
-  if (p < .001) {
-    "< .001"
-  } else {
-    paste0("= ", sprintf("%.3f", p))
-  }
-}
+# Tukey post-hoc tests
+public_tukey <- TukeyHSD(public_anova)
+rideshare_tukey <- TukeyHSD(rideshare_anova)
+
+# Combined ANOVA table for appendix
+anova_table <- bind_rows(
+  public_results |>
+    mutate(Analysis = "Public Transportation"),
+  rideshare_results |>
+    mutate(Analysis = "Rideshare")
+) |>
+  mutate(
+    Source = case_when(
+      term == "Residuals" ~ "Residuals",
+      TRUE ~ "Between Groups"
+    )
+  ) |>
+  select(
+    Analysis,
+    Source,
+    df,
+    sumsq,
+    meansq,
+    statistic,
+    p.value
+  )
+```
+
+```{r}
+#| label: pearson-analysis
+#| include: false
+
+# Supplemental Pearson correlations
+public_pearson <- cor.test(
+  transport_data$public_transit_num,
+  transport_data$ca_score,
+  method = "pearson"
+)
+
+rideshare_pearson <- cor.test(
+  transport_data$rideshare_num,
+  transport_data$ca_score,
+  method = "pearson"
+)
+
+public_r <- unname(public_pearson$estimate)
+public_cor_p <- public_pearson$p.value
+
+rideshare_r <- unname(rideshare_pearson$estimate)
+rideshare_cor_p <- rideshare_pearson$p.value
+
+correlation_table <- tibble(
+  Transportation = c(
+    "Public Transportation",
+    "Rideshare"
+  ),
+  r = c(
+    public_r,
+    rideshare_r
+  ),
+  p = c(
+    public_cor_p,
+    rideshare_cor_p
+  )
+)
 ```
 
 ```{r}
@@ -149,12 +221,12 @@ transport_plot <- transport_data |>
     values_to = "frequency"
   ) |>
   mutate(
-    transport_type = recode(
+    transport_type = dplyr::recode(
       transport_type,
       public_transit = "Public Transportation",
       rideshare = "Rideshare"
     ),
-    frequency = recode(
+    frequency = dplyr::recode(
       as.character(frequency),
       "Never" = "Never",
       "0-1 days a month" = "0–1 days/month",
@@ -179,10 +251,29 @@ transport_plot <- transport_data |>
 
 ## Research Question: Do Transportation Habits Predict Communication Apprehension?
 
+**Answer, Response, + Summary of Results**
+
+A one-way ANOVA found no significant differences in communication apprehension across public transportation frequency groups, *F*(4, 255) = `r sprintf("%.2f", public_f)`, *p* = `r sprintf("%.3f", public_p)`. In contrast, communication apprehension differed significantly across rideshare frequency groups, *F*(4, 255) = `r sprintf("%.2f", rideshare_f)`, *p* < .001. Tukey comparisons showed that participants who used rideshare 2–4 days per month, 4–8 days per month, or 8 or more days per month had significantly lower communication apprehension than participants who never used rideshare.
+
+Supplemental Pearson correlations showed a small negative relationship between public transportation frequency and communication apprehension, *r* = `r sprintf("%.3f", public_r)`, *p* = `r sprintf("%.3f", public_cor_p)`, and a stronger negative relationship between rideshare frequency and communication apprehension, *r* = `r sprintf("%.3f", rideshare_r)`, *p* < .001.
+
+Overall, rideshare frequency showed the clearest relationship with communication apprehension, with more frequent rideshare users generally reporting lower communication apprehension.
+
+**What Questions or Uncertainties Remain?**
+
+Would rideshare frequency remain associated with communication apprehension after accounting for factors such as age, car access, and employment status?
+
+\newpage
+
+# Appendix
+
+## Figure 1: Transportation Habits and Communication Apprehension
+
 ```{r}
 #| label: fig-transport-ca
+#| fig-cap: "Communication apprehension scores across public transportation and rideshare frequency groups."
 #| fig-width: 6.5
-#| fig-height: 3.0
+#| fig-height: 3.2
 #| fig-align: center
 
 ggplot(
@@ -210,12 +301,57 @@ ggplot(
   )
 ```
 
-**Answer, Response, + Summary of Results**
+## Table 1: ANOVA Results
 
-This analysis examined whether public transportation and rideshare frequency predict communication apprehension among `r n_transport` participants using combined group discussion and interpersonal PRCA scores. The boxplots showed little consistent difference across levels of public transportation use, while communication apprehension generally decreased as rideshare use became more frequent.
+```{r}
+#| label: tbl-anova
 
-A Spearman correlation showed a significant negative relationship between rideshare frequency and communication apprehension, ρ = -.344, *p* < .001. In a regression including both transportation measures, rideshare frequency significantly predicted communication apprehension, *p* < .001, while public transportation frequency did not, *p* = .882. Overall, the relationship between transportation habits and communication apprehension was primarily associated with rideshare use.
+anova_table |>
+  mutate(
+    sumsq = round(sumsq, 2),
+    meansq = round(meansq, 2),
+    statistic = round(statistic, 2),
+    p.value = case_when(
+      is.na(p.value) ~ "",
+      p.value < .001 ~ "< .001",
+      TRUE ~ sprintf("%.3f", p.value)
+    )
+  ) |>
+  kable(
+    col.names = c(
+      "Analysis",
+      "Source",
+      "df",
+      "Sum of Squares",
+      "Mean Square",
+      "F",
+      "p"
+    ),
+    caption = "One-way ANOVA results for transportation frequency and communication apprehension."
+  )
+```
 
-**What Questions or Uncertainties Remain?**
+## Table 2: Supplemental Pearson Correlations
 
-Would rideshare frequency still predict communication apprehension after accounting for other factors such as age, car access, and employment status?
+```{r}
+#| label: tbl-pearson
+
+correlation_table |>
+  mutate(
+    r = round(r, 3),
+    p = case_when(
+      p < .001 ~ "< .001",
+      TRUE ~ sprintf("%.3f", p)
+    )
+  ) |>
+  kable(
+    col.names = c(
+      "Transportation Measure",
+      "r",
+      "p"
+    ),
+    caption = "Supplemental Pearson correlations between transportation frequency and communication apprehension."
+  )
+```
+
+*Note.* Transportation frequency was coded from 0 = Never to 4 = 8 or more days per month for the supplemental Pearson correlations.
