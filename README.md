@@ -1,4 +1,4 @@
-# [Project Title]
+#  Does age and transportation habits predict communication apprehension?
 
 **Group:** JTSV
 **Course:** PSYCH 755, Summer 2026
