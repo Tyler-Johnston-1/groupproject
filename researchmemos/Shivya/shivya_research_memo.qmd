@@ -6,24 +6,23 @@ format:
   html:
     toc: false
     number-sections: false
+    code-fold: true
+    code-summary: "Show analysis code"
   pdf:
     toc: false
     number-sections: false
     geometry:
-      - margin=0.6in
-    fontsize: 10.5pt
+      - margin=0.55in
+    fontsize: 10pt
     mainfont: "Times New Roman"
     documentclass: article
     papersize: letter
+    code-overflow: wrap
 execute:
   echo: false
   warning: false
   message: false
 ---
-
-**Title:** Driver's License, Car Access, and Communication Apprehension  
-**Researcher:** Shivya Paul  
-**Date:** July 27, 2026
 
 ## Research or Analytical Question
 
@@ -31,59 +30,187 @@ Do people who have access to a car or a driver's license differ in communication
 
 ## Answer, Response, + Summary of Results
 
-I used responses from participants who could be matched across the Prolific and Qualtrics datasets. Group-discussion apprehension was calculated from Q1–Q6, and interpersonal apprehension was calculated from Q13–Q18. Positively worded items were reverse scored so that higher scores indicated greater communication apprehension. Because 99 participants did not answer the transportation-access questions, the driver's-license analysis included 153 participants and the car-access analysis included 152.
+I used responses from participants who could be matched across the Prolific and Qualtrics datasets. Participants without a driver's license or car access had higher average communication-apprehension scores, but none of the four differences were statistically significant.
 
-Participants without a driver's license had slightly higher average group-discussion apprehension than those with a license, 2.82 compared with 2.60. They also had higher interpersonal apprehension, 2.80 compared with 2.46. Neither difference was statistically significant.
+Group-discussion apprehension was scored from Q1–Q6, and interpersonal apprehension was scored from Q13–Q18. Positively worded items were reverse scored. Each subscale ranged from 6 to 30, with higher scores indicating greater communication apprehension. A participant needed to answer all six items to receive a subscale score.
 
-The same pattern appeared for car access. Participants without access to a car had slightly higher group-discussion apprehension than those with access, 2.83 compared with 2.58. Their interpersonal apprehension was also higher, 2.76 compared with 2.45. These differences were also not statistically significant.
+For driver's license, participants without a license had higher group-discussion apprehension (M = 16.95, SD = 6.07, n = 20) than those with a license (M = 15.59, SD = 6.38, n = 132), Welch's t(25.79) = -0.93, p = .363. They also had higher interpersonal apprehension (M = 16.81, SD = 5.45, n = 21) than those with a license (M = 14.74, SD = 6.33, n = 129), Welch's t(29.54) = -1.58, p = .125.
 
-Overall, participants without a license or car access had somewhat higher communication-apprehension scores, but all four differences were small and had p-values above .05. Therefore, this analysis did not find enough evidence to conclude that communication apprehension differed by driver's-license status or car access.
+For car access, participants without access had higher group-discussion apprehension (M = 17.00, SD = 5.37, n = 25) than those with access (M = 15.49, SD = 6.52, n = 126), Welch's t(39.45) = -1.24, p = .224. They also had higher interpersonal apprehension (M = 16.58, SD = 5.45, n = 26) than those with access (M = 14.64, SD = 6.36, n = 123), Welch's t(40.75) = -1.60, p = .118.
 
 ```{python}
-# Create compact results table
+#| output: true
+#| warning: false
+#| message: false
 import pandas as pd
+from scipy import stats
+import numpy as np
 
-results_data = [
-    {
-        'Comparison': "Driver's license — Group discussion",
-        'Yes M (SD)': '2.60 (1.06)',
-        'No M (SD)': '2.82 (0.99)',
-        "Welch's t(df)": 't(27.94) = -0.96',
-        'p': '.345',
-        "Cohen's d": '-0.21'
-    },
-    {
-        'Comparison': "Driver's license — Interpersonal",
-        'Yes M (SD)': '2.46 (1.06)',
-        'No M (SD)': '2.80 (0.91)',
-        "Welch's t(df)": 't(29.42) = -1.55',
-        'p': '.133',
-        "Cohen's d": '-0.32'
-    },
-    {
-        'Comparison': 'Car access — Group discussion',
-        'Yes M (SD)': '2.58 (1.09)',
-        'No M (SD)': '2.83 (0.88)',
-        "Welch's t(df)": 't(42.51) = -1.27',
-        'p': '.212',
-        "Cohen's d": '-0.24'
-    },
-    {
-        'Comparison': 'Car access — Interpersonal',
-        'Yes M (SD)': '2.45 (1.07)',
-        'No M (SD)': '2.76 (0.91)',
-        "Welch's t(df)": 't(40.55) = -1.56',
-        'p': '.128',
-        "Cohen's d": '-0.30'
-    }
+df = pd.read_csv('Summer2026DSHBData/merged_dataset_both_scores.csv')
+
+group_discussion_items = ['Q1_numeric', 'Q2_numeric', 'Q3_numeric',
+                          'Q4_numeric', 'Q5_numeric', 'Q6_numeric']
+group_discussion_complete = df[group_discussion_items].notna().all(axis=1)
+df['group_discussion_prca'] = np.where(group_discussion_complete,
+    18 - df['Q2_numeric'] - df['Q4_numeric'] - df['Q6_numeric']
+    + df['Q1_numeric'] + df['Q3_numeric'] + df['Q5_numeric'], np.nan)
+
+interpersonal_items = ['Q13_numeric', 'Q14_numeric', 'Q15_numeric',
+                       'Q16_numeric', 'Q17_numeric', 'Q18_numeric']
+interpersonal_complete = df[interpersonal_items].notna().all(axis=1)
+df['interpersonal_prca'] = np.where(interpersonal_complete,
+    18 - df['Q14_numeric'] - df['Q16_numeric'] - df['Q17_numeric']
+    + df['Q13_numeric'] + df['Q15_numeric'] + df['Q18_numeric'], np.nan)
+
+def calculate_welch_ttest(df, group_col, score_col,
+                         group1='Yes', group2='No', exclude_value=None):
+    if exclude_value:
+        df_filtered = df[(df[group_col].notna()) &
+                         (df[group_col] != exclude_value)].copy()
+    else:
+        df_filtered = df[df[group_col].notna()].copy()
+    df_filtered = df_filtered[df_filtered[score_col].notna()].copy()
+    group1_data = df_filtered[df_filtered[group_col] == group1][score_col]
+    group2_data = df_filtered[df_filtered[group_col] == group2][score_col]
+    n1, n2 = len(group1_data), len(group2_data)
+    mean1, std1 = group1_data.mean(), group1_data.std()
+    mean2, std2 = group2_data.mean(), group2_data.std()
+    t_stat, p_value = stats.ttest_ind(group1_data, group2_data,
+                                       equal_var=False)
+    var1, var2 = std1 ** 2, std2 ** 2
+    df_welch = (var1 / n1 + var2 / n2) ** 2 / (
+        (var1 / n1) ** 2 / (n1 - 1) + (var2 / n2) ** 2 / (n2 - 1))
+    return {'yes_n': n1, 'no_n': n2, 'yes_mean': mean1, 'yes_sd': std1,
+            'no_mean': mean2, 'no_sd': std2, 't_statistic': t_stat,
+            'degrees_of_freedom': df_welch, 'p_value': p_value}
+
+results = [calculate_welch_ttest(df, 'Q20', 'group_discussion_prca'),
+           calculate_welch_ttest(df, 'Q20', 'interpersonal_prca'),
+           calculate_welch_ttest(df, 'Q21', 'group_discussion_prca',
+                                exclude_value='Not Sure'),
+           calculate_welch_ttest(df, 'Q21', 'interpersonal_prca',
+                                exclude_value='Not Sure')]
+
+def format_p(value):
+    return f"{value:.3f}".lstrip("0")
+display_data = [
+    {'Comparison': "Driver's license — Group discussion",
+     'Yes M (SD)': f"{results[0]['yes_mean']:.2f} ({results[0]['yes_sd']:.2f})",
+     'No M (SD)': f"{results[0]['no_mean']:.2f} ({results[0]['no_sd']:.2f})",
+     "Welch's t(df)": f"t({results[0]['degrees_of_freedom']:.2f}) = {results[0]['t_statistic']:.2f}",
+     'p': format_p(results[0]['p_value'])},
+    {'Comparison': "Driver's license — Interpersonal",
+     'Yes M (SD)': f"{results[1]['yes_mean']:.2f} ({results[1]['yes_sd']:.2f})",
+     'No M (SD)': f"{results[1]['no_mean']:.2f} ({results[1]['no_sd']:.2f})",
+     "Welch's t(df)": f"t({results[1]['degrees_of_freedom']:.2f}) = {results[1]['t_statistic']:.2f}",
+     'p': format_p(results[1]['p_value'])},
+    {'Comparison': 'Car access — Group discussion',
+     'Yes M (SD)': f"{results[2]['yes_mean']:.2f} ({results[2]['yes_sd']:.2f})",
+     'No M (SD)': f"{results[2]['no_mean']:.2f} ({results[2]['no_sd']:.2f})",
+     "Welch's t(df)": f"t({results[2]['degrees_of_freedom']:.2f}) = {results[2]['t_statistic']:.2f}",
+     'p': format_p(results[2]['p_value'])},
+    {'Comparison': 'Car access — Interpersonal',
+     'Yes M (SD)': f"{results[3]['yes_mean']:.2f} ({results[3]['yes_sd']:.2f})",
+     'No M (SD)': f"{results[3]['no_mean']:.2f} ({results[3]['no_sd']:.2f})",
+     "Welch's t(df)": f"t({results[3]['degrees_of_freedom']:.2f}) = {results[3]['t_statistic']:.2f}",
+     'p': format_p(results[3]['p_value'])},
 ]
 
-results_df = pd.DataFrame(results_data)
+results_df = pd.DataFrame(display_data)
 results_df.style.hide(axis="index").set_properties(**{'font-size': '9pt'})
 ```
 
 ## What questions or uncertainties remain?
 
-- Ninety-nine participants did not answer Q20 or Q21, and the groups without a license or car access were much smaller than the Yes groups.
-- Age and other factors, such as income, disability, location, and public-transportation availability, may be related to both transportation access and communication apprehension.
-- These observational data cannot establish causation, and the survey contained only the group-discussion and interpersonal portions of the PRCA.
+- Ninety-nine of the 252 matched participants did not answer Q20 or Q21, so the results may not represent the full sample.
+
+## Analysis Code
+
+```{python}
+#| echo: true
+#| output: false
+#| warning: false
+#| message: false
+#| code-fold: true
+#| code-summary: "Show analysis code"
+#| fontsize: 8pt
+import pandas as pd
+from scipy import stats
+import numpy as np
+
+df = pd.read_csv("Summer2026DSHBData/merged_dataset_both_scores.csv")
+
+# group_discussion_prca: 18 - (Q2 + Q4 + Q6) + (Q1 + Q3 + Q5)
+group_discussion_items = ["Q1_numeric", "Q2_numeric", "Q3_numeric",
+                         "Q4_numeric", "Q5_numeric", "Q6_numeric"]
+group_discussion_complete = df[group_discussion_items].notna().all(axis=1)
+df["group_discussion_prca"] = np.where(group_discussion_complete,
+    18 - df["Q2_numeric"] - df["Q4_numeric"] - df["Q6_numeric"]
+    + df["Q1_numeric"] + df["Q3_numeric"] + df["Q5_numeric"], np.nan)
+
+# interpersonal_prca: 18 - (Q14 + Q16 + Q17) + (Q13 + Q15 + Q18)
+interpersonal_items = ["Q13_numeric", "Q14_numeric", "Q15_numeric",
+                       "Q16_numeric", "Q17_numeric", "Q18_numeric"]
+interpersonal_complete = df[interpersonal_items].notna().all(axis=1)
+df["interpersonal_prca"] = np.where(interpersonal_complete,
+    18 - df["Q14_numeric"] - df["Q16_numeric"] - df["Q17_numeric"]
+    + df["Q13_numeric"] + df["Q15_numeric"] + df["Q18_numeric"], np.nan)
+
+def calculate_welch_ttest(df, group_col, score_col,
+                         group1="Yes", group2="No", exclude_value=None):
+    if exclude_value:
+        df_filtered = df[(df[group_col].notna()) &
+                         (df[group_col] != exclude_value)].copy()
+    else:
+        df_filtered = df[df[group_col].notna()].copy()
+    df_filtered = df_filtered[df_filtered[score_col].notna()].copy()
+    group1_data = df_filtered[df_filtered[group_col] == group1][score_col]
+    group2_data = df_filtered[df_filtered[group_col] == group2][score_col]
+    n1, n2 = len(group1_data), len(group2_data)
+    mean1, std1 = group1_data.mean(), group1_data.std()
+    mean2, std2 = group2_data.mean(), group2_data.std()
+    t_stat, p_value = stats.ttest_ind(group1_data, group2_data,
+                                       equal_var=False)
+    var1, var2 = std1 ** 2, std2 ** 2
+    df_welch = (var1 / n1 + var2 / n2) ** 2 / (
+        (var1 / n1) ** 2 / (n1 - 1) + (var2 / n2) ** 2 / (n2 - 1))
+    return {"yes_n": n1, "no_n": n2, "yes_mean": mean1, "yes_sd": std1,
+            "no_mean": mean2, "no_sd": std2, "t_statistic": t_stat,
+            "degrees_of_freedom": df_welch, "p_value": p_value}
+
+def format_p(value):
+    return f"{value:.3f}".lstrip("0")
+
+results = [calculate_welch_ttest(df, "Q20", "group_discussion_prca"),
+           calculate_welch_ttest(df, "Q20", "interpersonal_prca"),
+           calculate_welch_ttest(df, "Q21", "group_discussion_prca",
+                                exclude_value="Not Sure"),
+           calculate_welch_ttest(df, "Q21", "interpersonal_prca",
+                                exclude_value="Not Sure")]
+
+display_data = [
+    {"Comparison": "Driver's license — Group discussion",
+     "Yes M (SD)": f"{results[0]['yes_mean']:.2f} ({results[0]['yes_sd']:.2f})",
+     "No M (SD)": f"{results[0]['no_mean']:.2f} ({results[0]['no_sd']:.2f})",
+     "Welch's t(df)": f"t({results[0]['degrees_of_freedom']:.2f}) = {results[0]['t_statistic']:.2f}",
+     "p": format_p(results[0]["p_value"])},
+    {"Comparison": "Driver's license — Interpersonal",
+     "Yes M (SD)": f"{results[1]['yes_mean']:.2f} ({results[1]['yes_sd']:.2f})",
+     "No M (SD)": f"{results[1]['no_mean']:.2f} ({results[1]['no_sd']:.2f})",
+     "Welch's t(df)": f"t({results[1]['degrees_of_freedom']:.2f}) = {results[1]['t_statistic']:.2f}",
+     "p": format_p(results[1]["p_value"])},
+    {"Comparison": "Car access — Group discussion",
+     "Yes M (SD)": f"{results[2]['yes_mean']:.2f} ({results[2]['yes_sd']:.2f})",
+     "No M (SD)": f"{results[2]['no_mean']:.2f} ({results[2]['no_sd']:.2f})",
+     "Welch's t(df)": f"t({results[2]['degrees_of_freedom']:.2f}) = {results[2]['t_statistic']:.2f}",
+     "p": format_p(results[2]["p_value"])},
+    {"Comparison": "Car access — Interpersonal",
+     "Yes M (SD)": f"{results[3]['yes_mean']:.2f} ({results[3]['yes_sd']:.2f})",
+     "No M (SD)": f"{results[3]['no_mean']:.2f} ({results[3]['no_sd']:.2f})",
+     "Welch's t(df)": f"t({results[3]['degrees_of_freedom']:.2f}) = {results[3]['t_statistic']:.2f}",
+     "p": format_p(results[3]["p_value"])},
+]
+
+results_df = pd.DataFrame(display_data)
+results_df.style.hide(axis="index").set_properties(**{"font-size": "9pt"})
+```
