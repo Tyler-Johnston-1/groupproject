@@ -1,4 +1,4 @@
-# [Project Title]
+#  Does age and transportation habits predict communication apprehension?
 
 **Group:** JTSV
 **Course:** PSYCH 755, Summer 2026
@@ -22,9 +22,9 @@ If your GitHub handle is not your name, this table is how we connect your commit
 |---|---|
 | `index.qmd` | The primary manuscript. Start here. |
 | `contributions.md` | Who owned what. |
-| `memos/` | Individual research memos, one per member. |
+| `researchmemos/` | Individual research memos, one per member. |
 | `references.bib` | Shared BibTeX file for the manuscript and memos. |
-| `data/` | Data used in this project. |
+| `cleandata/` | Data used in this project. |
 
 ## Reproducing this project
 
