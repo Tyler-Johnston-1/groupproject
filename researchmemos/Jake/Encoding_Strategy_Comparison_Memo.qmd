@@ -1,7 +1,11 @@
 ---
 title: "Which encoding strategy (composite or dummy) provides better predictive performance?"
 author: "Jacob Van Vleet"
-format: html
+format:
+  html:
+    toc: true
+  pdf:
+    toc: true
 execute:
   echo: true
   warning: false
