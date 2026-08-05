@@ -3,7 +3,7 @@
 **Group:** JTSV
 **Course:** PSYCH 755, Summer 2026
 
-One or two sentences on what this project asks and what it found. Replace this before you submit.
+This project examines whether age and transportation habits predict communication apprehension. The results showed that age and public transit use were not meaningful predictors, but more frequent rideshare use was associated with lower communication apprehension.
 
 ## Members
 
@@ -13,8 +13,6 @@ One or two sentences on what this project asks and what it found. Replace this b
 |Jacob Van Vleet|jacobvanvleet|
 |Shivya Paul|shivyapaul|
 | Vanessa Kountakis | vanessakoun |
-
-If your GitHub handle is not your name, this table is how we connect your commits to you. Fill it in during the first 72 hours (each member can fill in their own name to satisfy the initial commitment requirement).
 
 ## Suggested Project Structure + Contents
 
@@ -32,6 +30,3 @@ If your GitHub handle is not your name, this table is how we connect your commit
 # from the root of the repo
 quarto render index.qmd
 ```
-
-## Notes
-
