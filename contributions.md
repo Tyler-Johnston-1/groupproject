@@ -1,17 +1,11 @@
 # Contributions
 
-**Group [number/name]:** [Makeup A Fun Professional Group Name]
-**Group Members:** [Tyler Johnston, Shivya paul, Vanessa Kountakis, Jacob Van Vleet]
-**Project:** [title of your manuscript]
-**Repository:** [https://github.com/jacobvanvleet/groupproject.git]
+**Group:** *[JTSV]*
+**Group Members:** *[Tyler Johnston, Shivya paul, Vanessa Kountakis, Jacob Van Vleet]*
+**Project:** *[Do age and transportation habits predict communication apprehension?]*
+**Repository:** '(https://github.com/vanessakoun/groupproject.git)'
 
 ---
-
-## How to use this file
-
-Each member of the group completes one section below. Fill in every bullet. Delete the
-instructions in *italics* as you go, and delete any unused student sections at the bottom
-if your group has fewer than five members.
 
 Three rules:
 
@@ -39,61 +33,44 @@ Not like this (this one rots):
 https://github.com/ORG/REPO/blob/main/analysis/model.qmd#L112-L168
 ```
 
-### The data science process
-
-The last bullet in each section asks which portion of the data science process your work contributes to. Name the stage and be specific about your part in it ("data acquisitionand ingestion," "cleaning and validation," "exploratory analysis," "modeling," "evaluation," "visualization and communication," "infrastructure and reproducibility.") If your component spans two stages, say so, and say which one it mostly lives in.
-
----
-
-## Example (delete this section before submitting)
-
-### Jane Doe (`jdoe-wisc`)
-
-- **The component I "owned" and that I summarize here is best described as** the modeling and training or fit step — the KNN classifier that takes the cleaned feature matrix and predicts the target class, together with the grid search that chose the value of *K*.
-- **You can find this contribution in a file called** `src/models/knn.py` **at lines** 1–98, and in `manuscript.qmd` at lines 112–168 where the model is described and the grid-search results table is generated. [Permalink to `knn.py`](https://github.com/ORG/REPO/blob/a3f2c1e.../src/models/knn.py#L1-L98)
-- **Owning this component means** I chose KNN over the two other classifiers we considered (write-up in PR #21); I designed the *K*-grid (odd values from 3 to 51) and the 5-fold stratified cross-validation used to score each candidate; I wrote the fit-and-predict loop; and I debugged the scaling bug that was letting one high-variance feature dominate the distance metric. I did not build the feature matrix — Marcus did the wrangling, and he covers that in his section.
-- **The commits or PRs that are most relevant are** [#21 — model selection write-up](https://github.com/ORG/REPO/pull/21), [#24 — KNN + grid search over *K*](https://github.com/ORG/REPO/pull/24), and [a3f2c1e — scale features before distance calc](https://github.com/ORG/REPO/commit/a3f2c1e).
-- **The portion(s) of the [data science process](https://adamrossnelson.github.io/integsci375-public/readings/data_science_processes.html) that this effort contributes to is** stage 5, **Select + Apply** — reviewing candidate techniques, selecting KNN, and applying it with a grid search over *K* to produce the predictive model the manuscript reports on. It also has a foot in stage 6, **Check + Recheck**: the 5-fold cross-validation inside the grid search is where each candidate *K* is validated against held-out folds before the final *K* is chosen.
-
----
-
 ## Student 1: [Vanessa Kountakis] (`vanessakoun`)
 
-- **The component I "owned" and that I summarize here is best described as** *[One or two sentences. Name the thing. "The ingestion layer," "the model comparison and cross-validation," "the figure pipeline." Not "I helped with the analysis."]*
-- **You can find this contribution in a file called** `filename.qmd` **at lines** XX–YY. *[Add a permalink. List more than one file if the component genuinely spans them.]*
-- **Owning this component means** *[What did owning it actually involve — designing it? writing it? debugging it? deciding between alternatives? Use verbs. If someone else contributed to it, say what they did and where they claim it.]*
+- **The component I "owned" and that I summarize here is best described as** *[The Age and Communication Apprehension analysis, including the statistical analysis, visualization, and interpretation of age as a predictor of communication apprehension.]*
+- **You can find this contribution in a file called** `GroupManuscript.qmd` **at lines** XX–YY. *[Add a permalink. List more than one file if the component genuinely spans them.]*
+- **Owning this component means** *[I developed the analyses examining the relationship between age and communication apprehension, including the correlation and linear regression analyses. I created the corresponding visualization, interpreted the statistical results, and wrote the manuscript section describing the findings and their implications.]*
 - **The commits or PRs that are most relevant are** *[Two to four actual links. Not SHAs typed out as text — links we can click.]*
-- **The portion of the data science process that this effort contributes to is** *[Name the stage. Say why your part of it mattered to the project's findings.]*
+- **The portion of the data science process that this effort contributes to is** *[Modeling, evaluation, and visualization because I implemented and interpreted the statistical analyses examining age as a predictor of communication apprehension and communicated those findings in the manuscript.]*
 
 ---
 
 ## Student 2: [Tyler Johnston] (`Tyler-Johnston-1`)
 
-- **The component I "owned" and that I summarize here is best described as**
-- **You can find this contribution in a file called** `filename.qmd` **at lines** XX–YY.
-- **Owning this component means**
+- **The component I "owned" and that I summarize here is best described as** *[the predictive modeling analyses and model evaluation.]*
+- **You can find this contribution in a file called** `GroupManuscript_python.qmd` **at lines** XX–YY.
+- **Owning this component means** *[I implemented and interpreted the predictive modeling analyses, including the baseline model, K-Nearest Neighbors (KNN), Random Forest, and Neural Network models. I evaluated model performance, compared predictive accuracy across models, and wrote the manuscript sections describing the machine learning methods and results.]*
 - **The commits or PRs that are most relevant are**
-- **The portion of the data science process that this effort contributes to is**
+- **The portion of the data science process that this effort contributes to is** *[modeling and evaluation because I developed, compared, and interpreted the predictive models used to answer the project's research questions.]*
 
 ---
 
 ## Student 3: [Jacob Van Vleet] (`jacobvanvleet`)
 
-- **The component I "owned" and that I summarize here is best described as**
-- **You can find this contribution in a file called** `filename.qmd` **at lines** XX–YY.
-- **Owning this component means**
-- **The commits or PRs that are most relevant are**
-- **The portion of the data science process that this effort contributes to is**
+- **The component I "owned" and that I summarize here is best described as** *[converting the project analyses from R to Python, formatting the manuscript, and generating the final figures and tables.]*
+- **You can find this contribution in a file called** `GroupManuscript_python.qmd` **at lines** XX–YY.
+- **Owning this component means** *[I translated the original R analyses into Python while ensuring the results remained consistent, formatted the Quarto manuscript for the final submission, generated publication-ready figures and tables, and integrated the Python analyses into the completed manuscript.]*
+- **The commits or PRs that are most relevant are** 
+- **The portion of the data science process that this effort contributes to is** *[infrastructure and reproducibility, visualization and communication, because I recreated the analyses in Python, produced the final presentation of the results, and ensured the project could be reproduced using the final codebase.]*
 
 ---
 
 ## Student 4: [Shivya Paul] (`shivyapaul`)
 
-- **The component I "owned" and that I summarize here is best described as**
-- **You can find this contribution in a file called** `filename.qmd` **at lines** XX–YY.
-- **Owning this component means**
+- **The component I "owned" and that I summarize here is best described as** *[the Introduction and Methods sections, including data preparation and variable creation.]*
+- **You can find this contribution in a file called** `GroupManuscript.qmd` **at lines** XX–YY.
+- **Owning this component means** *[I wrote the Introduction, documented the study background and research questions, and prepared the Methods section describing the data collection, data cleaning, variable coding, reverse scoring, and creation of the final analytic dataset used throughout the project.]*
 - **The commits or PRs that are most relevant are**
-- **The portion of the data science process that this effort contributes to is**
+- **The portion of the data science process that this effort contributes to is** *[data acquisition and ingestion, cleaning and validation, and visualization/communication because I documented how the data were collected, prepared, and transformed into the dataset used for all subsequent analyses.]*
+
 
 ---
 
@@ -102,8 +79,8 @@ The last bullet in each section asks which portion of the data science process y
 
 By adding your name below, each member affirms that the account of their own contribution is accurate, and that they have read the other four sections and believe them to be accurate as well.
 
-- [ ] [Vanessa Kountakis] (`vanessakoun`) — [July 22, 2026]
-- [ ] [Tyler Johnston] (`Tyler-Johnston-1`) — [July 22, 2026]
-- [ ] [Jacob Van Vleet] (`jacobvanvleet`) — [July 22, 2026]
-- [ ] [Shivya Paul] (`shivyapaul`) — [July 22, 2026]
+- [ ] [Vanessa Kountakis] (`vanessakoun`) — [Aug 05, 2026]
+- [ ] [Tyler Johnston] (`Tyler-Johnston-1`) — [Aug 05, 2026]
+- [ ] [Jacob Van Vleet] (`jacobvanvleet`) — [Aug 05, 2026]
+- [ ] [Shivya Paul] (`shivyapaul`) — [Aug 05, 2026]
 
