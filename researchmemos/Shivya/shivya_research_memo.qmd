@@ -30,7 +30,7 @@ Do people who have access to a car or a driver's license differ in communication
 
 ## Answer, Response, + Summary of Results
 
-I used responses from participants who could be matched across the Prolific and Qualtrics datasets. Participants without a driver's license or car access had higher average communication-apprehension scores, but none of the four differences were statistically significant.
+No. This analysis did not find enough evidence to conclude that communication apprehension differed by driver’s-license status or car access. Participants without a driver’s license or car access had higher average communication-apprehension scores, but none of the four differences were statistically significant.
 
 Group-discussion apprehension was scored from Q1–Q6, and interpersonal apprehension was scored from Q13–Q18. Positively worded items were reverse scored. Each subscale ranged from 6 to 30, with higher scores indicating greater communication apprehension. A participant needed to answer all six items to receive a subscale score.
 
@@ -39,6 +39,9 @@ For driver's license, participants without a license had higher group-discussion
 For car access, participants without access had higher group-discussion apprehension (M = 17.00, SD = 5.37, n = 25) than those with access (M = 15.49, SD = 6.52, n = 126), Welch's t(39.45) = -1.24, p = .224. They also had higher interpersonal apprehension (M = 16.58, SD = 5.45, n = 26) than those with access (M = 14.64, SD = 6.36, n = 123), Welch's t(40.75) = -1.60, p = .118.
 
 ```{python}
+#| label: tbl-prca-results
+#| tbl-cap: "Welch’s t-test results comparing PRCA subscale scores by driver’s-license status and car access."
+#| echo: false
 #| output: true
 #| warning: false
 #| message: false
@@ -124,10 +127,11 @@ results_df.style.hide(axis="index").set_properties(**{'font-size': '9pt'})
 
 - Ninety-nine of the 252 matched participants did not answer Q20 or Q21, so the results may not represent the full sample.
 
-## Analysis Code
-
 ```{python}
+#| label: lst-prca-analysis
+#| lst-cap: "Python code used to calculate the PRCA subscale scores and run the four Welch’s t-tests."
 #| echo: true
+#| eval: false
 #| output: false
 #| warning: false
 #| message: false
@@ -188,29 +192,4 @@ results = [calculate_welch_ttest(df, "Q20", "group_discussion_prca"),
            calculate_welch_ttest(df, "Q21", "interpersonal_prca",
                                 exclude_value="Not Sure")]
 
-display_data = [
-    {"Comparison": "Driver's license — Group discussion",
-     "Yes M (SD)": f"{results[0]['yes_mean']:.2f} ({results[0]['yes_sd']:.2f})",
-     "No M (SD)": f"{results[0]['no_mean']:.2f} ({results[0]['no_sd']:.2f})",
-     "Welch's t(df)": f"t({results[0]['degrees_of_freedom']:.2f}) = {results[0]['t_statistic']:.2f}",
-     "p": format_p(results[0]["p_value"])},
-    {"Comparison": "Driver's license — Interpersonal",
-     "Yes M (SD)": f"{results[1]['yes_mean']:.2f} ({results[1]['yes_sd']:.2f})",
-     "No M (SD)": f"{results[1]['no_mean']:.2f} ({results[1]['no_sd']:.2f})",
-     "Welch's t(df)": f"t({results[1]['degrees_of_freedom']:.2f}) = {results[1]['t_statistic']:.2f}",
-     "p": format_p(results[1]["p_value"])},
-    {"Comparison": "Car access — Group discussion",
-     "Yes M (SD)": f"{results[2]['yes_mean']:.2f} ({results[2]['yes_sd']:.2f})",
-     "No M (SD)": f"{results[2]['no_mean']:.2f} ({results[2]['no_sd']:.2f})",
-     "Welch's t(df)": f"t({results[2]['degrees_of_freedom']:.2f}) = {results[2]['t_statistic']:.2f}",
-     "p": format_p(results[2]["p_value"])},
-    {"Comparison": "Car access — Interpersonal",
-     "Yes M (SD)": f"{results[3]['yes_mean']:.2f} ({results[3]['yes_sd']:.2f})",
-     "No M (SD)": f"{results[3]['no_mean']:.2f} ({results[3]['no_sd']:.2f})",
-     "Welch's t(df)": f"t({results[3]['degrees_of_freedom']:.2f}) = {results[3]['t_statistic']:.2f}",
-     "p": format_p(results[3]["p_value"])},
-]
-
-results_df = pd.DataFrame(display_data)
-results_df.style.hide(axis="index").set_properties(**{"font-size": "9pt"})
 ```
