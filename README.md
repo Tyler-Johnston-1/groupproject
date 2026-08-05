@@ -35,4 +35,3 @@ quarto render index.qmd
 
 ## Notes
 
-[Anything a reader needs to know that does not belong in the manuscript. Delete this section if you have nothing to say here.]
