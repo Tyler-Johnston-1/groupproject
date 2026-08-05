@@ -4,6 +4,8 @@ format: pdf
 ---
 ```{r echo=FALSE, include=FALSE}
 library(tidyverse)
+library(broom)
+library(knitr)
 options(conflicts.policy = "depends.ok")
 path_data <- "C:/Users/ttdog/Projects/groupproject_sibling_data/cleandata"
 ```
@@ -188,6 +190,19 @@ data_all <- data_all |>
     public_frequency = as.numeric(as.character(public_transport_monthly))
   )
 
+# Convert monthly frequency to numeric for interaction
+data_all <- data_all |>
+  mutate(
+    ride_frequency_num = as.numeric(as.character(ride_share_monthly)),
+    public_frequency_num = as.numeric(as.character(public_transport_monthly))
+  )
+
+# Create overall transportation frequency score
+data_all <- data_all |>
+  mutate(
+    overall_transport_frequency = ride_frequency_num + public_frequency_num
+  )
+
 model_frequency <- lm(
   communication_apprehension ~ ride_frequency + public_frequency,
   data = data_all
@@ -352,10 +367,10 @@ ggplot(
 
 There was a consistent trend in which people who use ride share or public transportation (or both) had significantly lower communication apprehension than those who use neither, and that trend continued as frequency of use increased.
 
-Ride-share-only users had lower communication apprehension on average than public-transportation-only users and even those who use both modes of transportation (@tbl-1).
+Ride-share-only users had lower communication apprehension on average than public-transportation-only users and even those who use both modes of transportation [CA-by-TG](#tbl-CA-by-TG).
 
 ```{r}
-#| label: tbl-1
+#| label: tbl-CA-by-TG
 #| tbl-cap: "Average communication apprehension by transportation group"
 #| echo: false
 
@@ -383,10 +398,50 @@ model_frequency <- lm(
   communication_apprehension ~ ride_frequency + public_frequency,
   data = data_all)
 
-summary(model_frequency)
+tidy(model_frequency) %>%
+  kable(digits = 3)
 ```
- @fig-1 helps visualize this pattern: the black line shows the overall negative relationship between transportation-use frequency and communication apprehension, while the other lines show the trends among ride-share-only and public-transportation-only users. The ride-share group shows a more pronounced decrease in communication apprehension as frequency increases, while the trend among public-transportation-only users is weaker.
 
-![Relationship between transportation-use frequency and communication apprehension](Rplot.png){#fig-1}
+```{r}
+#| label: fig-TF-and-CA
+#| tbl-cap: "Relationship between transportation-use frequency and communication apprehension"
+#| echo: false
+
+plot_data <- data_all %>%
+  filter(transport_group %in% c("Public transport only",
+                                "Ride share only"))
+
+ggplot(plot_data,
+       aes(x = overall_transport_frequency,
+           y = communication_apprehension)) +
+
+  # Raw observations
+  geom_point(aes(color = transport_group),
+             alpha = 0.8,
+             size = 2.5) +
+
+  # Group-specific regressions
+  geom_smooth(aes(color = transport_group),
+              method = "lm",
+              se = FALSE,
+              linewidth = 1.2) +
+
+  # Overall regression across these two groups
+  geom_smooth(method = "lm",
+              color = "black",
+              se = FALSE,
+              linewidth = 1.2) +
+
+  labs(
+    x = "Monthly use frequency",
+    y = "Communication apprehension",
+    color = "Transportation mode"
+  ) +
+
+  theme_minimal(base_size = 13)
+
+```
+
+[TF-and-CA](#fig-TF-and-CA) helps visualize this pattern: the black line shows the overall negative relationship between transportation-use frequency and communication apprehension, while the other lines show the trends among ride-share-only and public-transportation-only users. The ride-share group shows a more pronounced decrease in communication apprehension as frequency increases, while the trend among public-transportation-only users is weaker.
 
 
